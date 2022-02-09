@@ -33,6 +33,11 @@ public:
     void close();
 private:
     ofstream fout;
+    int labelNum; // return label number (initial 0)
+    string decSP();
+    string incSP();
+    string getReturn();
+    string setReturn();
 };
 
 int main(int argc, char** argv) {
@@ -181,7 +186,11 @@ int Parser::arg2() {
 }
 
 void CodeWriter::setFileName(string filename) {
+    labelNum = 0;
     fout.open(filename);
+    fout << "@START\n0;JMP\n";
+    fout << "(MAKETRUE)\n" << decSP() << "M=-1\n" << incSP() << getReturn();
+    fout << "(START)\n";
 }
 
 void CodeWriter::close() {
@@ -189,9 +198,40 @@ void CodeWriter::close() {
     fout.close();
 }
 
+string CodeWriter::decSP() { return "@SP\nAM=M-1\n"; }
+
+string CodeWriter::incSP() { return "@SP\nAM=M+1\n"; }
+
+string CodeWriter::setReturn() { return  "@RETURN" + to_string(labelNum) + "\nD=A\n@R15\nM=D\n"; }
+
+string CodeWriter::getReturn() { return  "@R15\nA=M\n0;JMP\n"; }
+
 void CodeWriter::writeArithmetic(string cmd) {
-    if (cmd == "add") {
-        fout << "@SP\nM=M-1\nA=M\nD=M\n@SP\nM=M-1\nA=M\nM=D+M\n@SP\nM=M+1\n";
+    if (cmd == "add" || cmd == "sub" || cmd == "and" || cmd == "or")
+    {
+        fout << decSP() << "D=M\n" << decSP();
+        if (cmd == "add")      fout << "M=D+M\n";
+        else if (cmd == "sub") fout << "M=M-D\n";
+        else if (cmd == "and") fout << "M=D&M\n";
+        else                   fout << "M=D|M\n";
+        fout << incSP();
+    }
+    else if (cmd == "neg" || cmd == "not") {
+        fout << decSP();
+        if (cmd == "neg") fout << "M=-M\n";
+        else              fout << "M=!M\n";
+        fout << incSP();
+    }
+    else if (cmd == "eq" || cmd == "gt" || cmd == "lt") {
+        fout << setReturn();
+        fout << decSP() << "D=M\n" << decSP() << "D=M-D\nM=0\n" << incSP() << "@MAKETRUE\n";
+        if (cmd == "eq")      fout << "D;JEQ\n";
+        else if (cmd == "gt") fout << "D;JGT\n";
+        else                  fout << "D;JLT\n";
+        fout << "(RETURN" << labelNum++ << ")\n";
+    }
+    else {
+        cout << "Invalid Arithmetic OP\n";
     }
 }
 
