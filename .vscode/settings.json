@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.m": "matlab",
+        "*.py": "python",
+        "vector": "cpp",
+        "ostream": "cpp"
+    }
+}
