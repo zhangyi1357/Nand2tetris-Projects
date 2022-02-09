@@ -9,7 +9,7 @@ using namespace std;
 
 vector<string> filefinder(string path, string const& postfix = ".vm");
 bool hasEnding(string const& fullString, string const& ending = ".vm");
-string getOutputFilename(const string& inputFilename);
+string getNoPostFilename(const string& inputFilename);
 enum class CommandType { C_ARITHMETIC, C_PUSH, C_POP, C_LABEL, C_GOTO, C_IF, C_FUNCTION, C_RETURN, C_CALL };
 
 class Parser {
@@ -34,8 +34,10 @@ public:
 private:
     ofstream fout;
     int labelNum; // return label number (initial 0)
+    string filename;
     string decSP();
     string incSP();
+    string getSP();
     string getReturn();
     string setReturn();
 };
@@ -50,9 +52,9 @@ int main(int argc, char** argv) {
     CodeWriter codeWriter;
     for (int i = 0; i < files.size(); i++) {
         Parser parser(files[i]);
-        string outputFilename = getOutputFilename(files[i]);
+        string filename = getNoPostFilename(files[i]);
         // cout << outputFilename << endl;
-        codeWriter.setFileName(outputFilename);
+        codeWriter.setFileName(filename);
         while (parser.hasMoreCommands()) {
             CommandType cmdType = parser.commandType();
             if (cmdType == CommandType::C_ARITHMETIC) {
@@ -99,8 +101,8 @@ vector<string> filefinder(string path, string const& postfix) {
     return files;
 }
 
-string getOutputFilename(const string& inputFilename) {
-    return inputFilename.substr(0, inputFilename.find_last_of(".")) + ".asm";
+string getNoPostFilename(const string& inputFilename) {
+    return inputFilename.substr(0, inputFilename.find_last_of("."));
 }
 
 Parser::Parser(string filename) :lineNum(-1) {
@@ -187,7 +189,9 @@ int Parser::arg2() {
 
 void CodeWriter::setFileName(string filename) {
     labelNum = 0;
-    fout.open(filename);
+    fout.open(filename + ".asm");
+    size_t slash = filename.find_last_of("\\");
+    this->filename = (slash == string::npos) ? filename : filename.substr(slash + 1);
     fout << "@START\n0;JMP\n";
     fout << "(MAKETRUE)\n" << decSP() << "M=-1\n" << incSP() << getReturn();
     fout << "(START)\n";
@@ -201,6 +205,8 @@ void CodeWriter::close() {
 string CodeWriter::decSP() { return "@SP\nAM=M-1\n"; }
 
 string CodeWriter::incSP() { return "@SP\nAM=M+1\n"; }
+
+string CodeWriter::getSP() { return "@SP\nA=M\n"; }
 
 string CodeWriter::setReturn() { return  "@RETURN" + to_string(labelNum) + "\nD=A\n@R15\nM=D\n"; }
 
@@ -239,12 +245,51 @@ void CodeWriter::writePushPop(CommandType cmdType, string segment, int index) {
     assert(cmdType == CommandType::C_PUSH || cmdType == CommandType::C_POP);
     cout << "segment: " << segment << segment.size() << endl;
     if (cmdType == CommandType::C_PUSH) {
+        // put the value need to be pushed in D
         if (segment == "constant")
-            fout << "@" << index << "\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n";
-        else
-            cout << "push: only constant now.\n";
+            fout << "@" << index << "\nD=A\n";
+        else if (segment == "static") {
+            fout << "@" << filename << "." << index << "\nD=M\n";
+        }
+        else {
+            if (segment == "pointer" || segment == "temp") {
+                if (segment == "pointer") fout << "@THIS\n";
+                else                      fout << "@R5\n";
+                fout << "D=A\n";
+            }
+            else {
+                if (segment == "local")         fout << "@LCL\n";
+                else if (segment == "argument") fout << "@ARG\n";
+                else if (segment == "this")     fout << "@THIS\n";
+                else                            fout << "@THAT\n";
+                fout << "D=M\n";
+            }
+            fout << "@" << index << "\nA=D+A\nD=M\n";
+        }
+        // push D to stack
+        fout << getSP() << "M=D\n" << incSP();
+
     }
     else {
-        cout << "Pop not finished yet" << endl;
+        if (segment == "static") {
+            fout << decSP() << "D=M\n";
+            fout << "@" << filename << "." << index << "\nM=D\n";
+        }
+        else {
+            if (segment == "pointer" || segment == "temp") {
+                if (segment == "pointer") fout << "@THIS\n";
+                else                      fout << "@R5\n";
+                fout << "D=A\n@";
+            }
+            else {
+                if (segment == "local")         fout << "@LCL\n";
+                else if (segment == "argument") fout << "@ARG\n";
+                else if (segment == "this")     fout << "@THIS\n";
+                else                            fout << "@THAT\n";
+                fout << "D=M\n@";
+            }
+            // R13 is the address of RAM
+            fout << index << "\nD=D+A\n" << "@R13\nM=D\n" << decSP() << "D=M\n" << "@R13\nA=M\nM=D\n";
+        }
     }
 }
