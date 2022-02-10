@@ -3,14 +3,36 @@
 #include <cassert>
 using namespace std;
 
-void CodeWriter::setFileName(string filename) {
-    labelNum = 0;
-    fout.open(filename + ".asm");
-    size_t slash = filename.find_last_of("\\");
-    this->filename = (slash == string::npos) ? filename : filename.substr(slash + 1);
+CodeWriter::CodeWriter(string pathname) : labelNum(0), programCnt(0) {
+    // pathname: either ".\*\" or ".\*\xxx.vm"
+    string outputFilename;
+    if (hasEnding(pathname, ".vm")) {
+        outputFilename = getNoPostFilename(pathname);
+    }
+    else {
+        pathname.erase(pathname.size() - 1); // remove last character
+        int found = pathname.find_last_of("\\");
+        filename = (found == string::npos) ? pathname : pathname.substr(found + 1);
+        outputFilename = pathname + "\\" + filename;
+    }
+    cout << outputFilename << endl;
+    fout.open(outputFilename + ".asm");
+}
+
+void CodeWriter::writeInit() {
+    fout << "@256\nD=A\n@SP\nM=D\n"; // initialize RAM[0] = 256
     fout << "@START\n0;JMP\n";
     fout << "(MAKETRUE)\n" << decSP() << "M=-1\n" << incSP() << getReturn();
     fout << "(START)\n";
+    // fout << "@_MAIN_\n0;JMP\n"; // Single file compile doesn't need this
+}
+
+void CodeWriter::setFileName(string filename) {
+    size_t slash = filename.find_last_of("\\");
+    this->filename = (slash == string::npos) ? filename : filename.substr(slash + 1);
+    for (int i = 0; i < this->filename.size(); i++)
+        this->filename[i] = toupper(this->filename[i]);
+    fout << "(_" << this->filename << "_)\n";
 }
 
 void CodeWriter::close() {
@@ -59,7 +81,7 @@ void CodeWriter::writeArithmetic(string cmd) {
 
 void CodeWriter::writePushPop(CommandType cmdType, string segment, int index) {
     assert(cmdType == CommandType::C_PUSH || cmdType == CommandType::C_POP);
-    cout << "segment: " << segment << segment.size() << endl;
+    // cout << "segment: " << segment << segment.size() << endl;
     if (cmdType == CommandType::C_PUSH) {
         // put the value need to be pushed in D
         if (segment == "constant")
@@ -109,3 +131,22 @@ void CodeWriter::writePushPop(CommandType cmdType, string segment, int index) {
         }
     }
 }
+
+void CodeWriter::writeGoto(string label) {
+    fout << "\n";
+    fout << "@" << label << "\n0;JMP\n";
+    fout << "\n";
+}
+
+void CodeWriter::writeLabel(string label) {
+    fout << "\n";
+    fout << "(" << label << ")\n";
+    fout << "\n";
+}
+
+void CodeWriter::writeIf(string label) {
+    fout << "\n";
+    fout << decSP() << "D=M\n@" << label << "\nD;JNE\n";
+    fout << "\n";
+}
+

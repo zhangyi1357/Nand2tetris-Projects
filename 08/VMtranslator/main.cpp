@@ -10,17 +10,18 @@
 using namespace std;
 
 vector<string> filefinder(string path, string const& postfix = ".vm");
-bool hasEnding(string const& fullString, string const& ending = ".vm");
-string getNoPostFilename(const string& inputFilename);
+
 
 int main(int argc, char** argv) {
     vector<string> files;
     string path = argv[1];
-    if (hasEnding(path))
+    if (hasEnding(path)) {
         files.push_back(path);
-    else
+    }
+    else {
         files = filefinder(path);
-    CodeWriter codeWriter;
+    }
+    CodeWriter codeWriter(path);
     for (int i = 0; i < files.size(); i++) {
         Parser parser(files[i]);
         string filename = getNoPostFilename(files[i]);
@@ -28,13 +29,19 @@ int main(int argc, char** argv) {
         codeWriter.setFileName(filename);
         while (parser.hasMoreCommands()) {
             CommandType cmdType = parser.commandType();
-            if (cmdType == CommandType::C_ARITHMETIC) {
-                string cmd = parser.arg1(cmdType);
-                codeWriter.writeArithmetic(cmd);
-            }
-            else if (cmdType == CommandType::C_PUSH || cmdType == CommandType::C_POP) {
+            cout << int(cmdType) << endl;
+            if (cmdType == CommandType::C_ARITHMETIC)
+                codeWriter.writeArithmetic(parser.arg1(cmdType));
+            else if (cmdType == CommandType::C_PUSH || cmdType == CommandType::C_POP)
                 codeWriter.writePushPop(cmdType, parser.arg1(cmdType), parser.arg2());
+            else if (cmdType == CommandType::C_LABEL)
+            {
+                codeWriter.writeLabel(parser.arg1(cmdType));cout << "HERE";
             }
+            else if (cmdType == CommandType::C_GOTO)
+                codeWriter.writeGoto(parser.arg1(cmdType));
+            else if (cmdType == CommandType::C_IF)
+                codeWriter.writeIf(parser.arg1(cmdType));
             else {
                 cout << "Not finished yet." << endl;
             }
@@ -44,16 +51,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-// get from
-// https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c
-bool hasEnding(string const& fullString, string const& ending) {
-    if (fullString.length() >= ending.length()) {
-        return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
-    }
-    else {
-        return false;
-    }
-}
+
 
 // get from 
 // https://stackoverflow.com/questions/612097/how-can-i-get-the-list-of-files-in-a-directory-using-c-or-c
@@ -73,6 +71,3 @@ vector<string> filefinder(string path, string const& postfix) {
     return files;
 }
 
-string getNoPostFilename(const string& inputFilename) {
-    return inputFilename.substr(0, inputFilename.find_last_of("."));
-}
