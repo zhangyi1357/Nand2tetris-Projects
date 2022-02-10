@@ -9,6 +9,7 @@ using std::ofstream;
 class CodeWriter {
 public:
     CodeWriter(string pathname);
+    ~CodeWriter();
     void writeInit();
     void setFileName(string filename);
     void writeArithmetic(string cmd);
@@ -16,12 +17,15 @@ public:
     void writeLabel(string label);
     void writeGoto(string label);
     void writeIf(string label);
+    void writeCall(string functionName, int numArgs);
+    void writeReturn();
+    void writeFunction(string functionName, int numLocals);
     void close();
 private:
     ofstream fout;
     int labelNum; // return label number (initial 0)
-    int programCnt; // initial 0
     string filename;
+    string functionName;
     string decSP();
     string incSP();
     string getSP();

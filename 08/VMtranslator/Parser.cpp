@@ -37,7 +37,7 @@ bool Parser::hasMoreCommands() {
 
 CommandType Parser::commandType() {
     string cmd = lines[lineNum].substr(0, lines[lineNum].find_first_of(" "));
-    // cout << cmd << "1" << endl;
+    // cout << cmd << endl;
     CommandType cmdType;
     if (cmd == "add" || cmd == "sub" || cmd == "neg" ||
         cmd == "eq" || cmd == "gt" || cmd == "lt" ||
@@ -61,7 +61,7 @@ CommandType Parser::commandType() {
         cmdType = CommandType::C_RETURN;
     else
         cout << "not valid cmdtype: " << cmd;
-    cout << int(cmdType);
+    // cout << int(cmdType);
     return cmdType;
 }
 
@@ -77,6 +77,10 @@ string Parser::arg1(CommandType cmdType) {
             arg1 = lines[lineNum].substr(firstSpace + 1, lastSpace - firstSpace - 1);
         else
             arg1 = lines[lineNum].substr(firstSpace + 1, string::npos);
+        if (cmdType == CommandType::C_CALL || cmdType == CommandType::C_FUNCTION) {
+            size_t dot = arg1.find_last_of(".");
+            arg1 = arg1.substr(dot + 1);
+        }
     }
     // cout << "arg1: " << arg1 << endl;
     return arg1;

@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
         files = filefinder(path);
     }
     CodeWriter codeWriter(path);
+    codeWriter.writeInit();
     for (int i = 0; i < files.size(); i++) {
         Parser parser(files[i]);
         string filename = getNoPostFilename(files[i]);
@@ -29,19 +30,23 @@ int main(int argc, char** argv) {
         codeWriter.setFileName(filename);
         while (parser.hasMoreCommands()) {
             CommandType cmdType = parser.commandType();
-            cout << int(cmdType) << endl;
+            // cout << int(cmdType) << endl;
             if (cmdType == CommandType::C_ARITHMETIC)
                 codeWriter.writeArithmetic(parser.arg1(cmdType));
             else if (cmdType == CommandType::C_PUSH || cmdType == CommandType::C_POP)
                 codeWriter.writePushPop(cmdType, parser.arg1(cmdType), parser.arg2());
             else if (cmdType == CommandType::C_LABEL)
-            {
-                codeWriter.writeLabel(parser.arg1(cmdType));cout << "HERE";
-            }
+                codeWriter.writeLabel(parser.arg1(cmdType));
             else if (cmdType == CommandType::C_GOTO)
                 codeWriter.writeGoto(parser.arg1(cmdType));
             else if (cmdType == CommandType::C_IF)
                 codeWriter.writeIf(parser.arg1(cmdType));
+            else if (cmdType == CommandType::C_FUNCTION)
+                codeWriter.writeFunction(parser.arg1(cmdType), parser.arg2());
+            else if (cmdType == CommandType::C_RETURN)
+                codeWriter.writeReturn();
+            else if (cmdType == CommandType::C_CALL)
+                codeWriter.writeCall(parser.arg1(cmdType), parser.arg2());
             else {
                 cout << "Not finished yet." << endl;
             }

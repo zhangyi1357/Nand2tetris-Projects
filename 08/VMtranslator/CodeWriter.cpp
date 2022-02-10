@@ -3,7 +3,7 @@
 #include <cassert>
 using namespace std;
 
-CodeWriter::CodeWriter(string pathname) : labelNum(0), programCnt(0) {
+CodeWriter::CodeWriter(string pathname) : labelNum(0) {
     // pathname: either ".\*\" or ".\*\xxx.vm"
     string outputFilename;
     if (hasEnding(pathname, ".vm")) {
@@ -19,12 +19,16 @@ CodeWriter::CodeWriter(string pathname) : labelNum(0), programCnt(0) {
     fout.open(outputFilename + ".asm");
 }
 
+CodeWriter::~CodeWriter() {
+    fout.close();
+}
+
 void CodeWriter::writeInit() {
-    fout << "@256\nD=A\n@SP\nM=D\n"; // initialize RAM[0] = 256
+    fout << "@256\nD=A\n@SP\nM=D\n"; // comment this out in no init situation
     fout << "@START\n0;JMP\n";
     fout << "(MAKETRUE)\n" << decSP() << "M=-1\n" << incSP() << getReturn();
     fout << "(START)\n";
-    // fout << "@_MAIN_\n0;JMP\n"; // Single file compile doesn't need this
+    writeCall("init", 0); // comment this out in no init situation
 }
 
 void CodeWriter::setFileName(string filename) {
@@ -36,8 +40,7 @@ void CodeWriter::setFileName(string filename) {
 }
 
 void CodeWriter::close() {
-    fout << "(END)\n@END\n0;JMP\n";
-    fout.close();
+    fout << "(END)\n@END\n0;JMP\n"; // write infinite loop
 }
 
 string CodeWriter::decSP() { return "@SP\nAM=M-1\n"; }
@@ -133,20 +136,74 @@ void CodeWriter::writePushPop(CommandType cmdType, string segment, int index) {
 }
 
 void CodeWriter::writeGoto(string label) {
-    fout << "\n";
-    fout << "@" << label << "\n0;JMP\n";
-    fout << "\n";
+    // fout << "\n";
+    fout << "@" << functionName << "$" << label << "\n0;JMP\n";
+    // fout << "\n";
 }
 
 void CodeWriter::writeLabel(string label) {
-    fout << "\n";
-    fout << "(" << label << ")\n";
-    fout << "\n";
+    // fout << "\n";
+    fout << "(" << functionName << "$" << label << ")\n";
+    // fout << "\n";
 }
 
 void CodeWriter::writeIf(string label) {
+    // fout << "\n";
+    fout << decSP() << "D=M\n@" << functionName << "$" << label << "\nD;JNE\n";
+    // fout << "\n";
+}
+
+void CodeWriter::writeCall(string functionName, int numArgs) {
     fout << "\n";
-    fout << decSP() << "D=M\n@" << label << "\nD;JNE\n";
+    // push RETURNlabelNum
+    fout << "@RETURN" << labelNum << "\nD=A\n" << getSP() << "M=D\n" << incSP();
+    // push LCL
+    fout << "@LCL\nD=M\n" << getSP() << "M=D\n" << incSP();
+    // push ARG
+    fout << "@ARG\nD=M\n" << getSP() << "M=D\n" << incSP();
+    // push THIS
+    fout << "@THIS\nD=M\n" << getSP() << "M=D\n" << incSP();
+    // push THAT
+    fout << "@THAT\nD=M\n" << getSP() << "M=D\n" << incSP();
+    // ARG = SP - n - 5
+    fout << "@SP\nD=M\n@" << numArgs << "\nD=D-A\n@5\nD=D-A\n@ARG\nM=D\n";
+    // LCL = SP
+    fout << "@SP\nD=M\n@LCL\nM=D\n";
+    // goto f
+    fout << "@" << functionName << "\n0;JMP\n";
+    // (RETURNlabelNum)
+    fout << "(RETURN" << labelNum++ << ")\n";
     fout << "\n";
 }
 
+void CodeWriter::writeReturn() {
+    fout << "\n";
+    // FRAME = LCL
+    fout << "@LCL\nD=M\n@FRAME\nM=D\n";
+    // RET = *(FRAME - 5)
+    fout << "@FRAME\nD=M\n@5\nA=D-A\nD=M\n@RET\nM=D\n";
+    // *ARG = pop()
+    fout << decSP() << "D=M\n@ARG\nA=M\nM=D\n";
+    // SP = ARG + 1
+    fout << "@ARG\nD=M+1\n@SP\nM=D\n";
+    // THAT = *(FRAME - 1)
+    fout << "@FRAME\nD=M\n@1\nA=D-A\nD=M\n@THAT\nM=D\n";
+    // THIS = *(FRAME - 2)
+    fout << "@FRAME\nD=M\n@2\nA=D-A\nD=M\n@THIS\nM=D\n";
+    // ARG = *(FRAME - 3)
+    fout << "@FRAME\nD=M\n@3\nA=D-A\nD=M\n@ARG\nM=D\n";
+    // LCL = *(FRAME - 4)
+    fout << "@FRAME\nD=M\n@4\nA=D-A\nD=M\n@LCL\nM=D\n";
+    // goto RET
+    fout << "@RET\nA=M\n0;JMP\n";
+    fout << "\n";
+}
+
+void CodeWriter::writeFunction(string functionName, int numLocals) {
+    fout << "\n";
+    this->functionName = functionName;
+    fout << "(" << functionName << ")\n";
+    for (int i = 0; i < numLocals; i++)
+        writePushPop(CommandType::C_PUSH, "constant", 0);
+    fout << "\n";
+}
