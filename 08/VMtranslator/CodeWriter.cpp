@@ -28,7 +28,7 @@ void CodeWriter::writeInit() {
     fout << "@START\n0;JMP\n";
     fout << "(MAKETRUE)\n" << decSP() << "M=-1\n" << incSP() << getReturn();
     fout << "(START)\n";
-    writeCall("init", 0); // comment this out in no init situation
+    writeCall("Sys.init", 0); // comment this out in no init situation
 }
 
 void CodeWriter::setFileName(string filename) {
