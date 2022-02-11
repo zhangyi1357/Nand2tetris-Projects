@@ -1,27 +1,23 @@
 #include "Parser.h"
+
+#include <cassert>
 #include <fstream>
 #include <iostream>
-#include <cassert>
 using namespace std;
 
-
-Parser::Parser(string filename) :lineNum(-1) {
+Parser::Parser(string filename) : lineNum(-1) {
     ifstream fin(filename);
     string line;
-    while (getline(fin, line))
-    {
+    while (getline(fin, line)) {
         size_t found;
         // Remove comment
         found = line.find_first_of("/");
-        if (found != string::npos)
-            line.erase(found);
+        if (found != string::npos) line.erase(found);
         // Remove leading and ending spaces
         found = line.find_first_not_of(" ");
-        if (found != string::npos)
-            line.erase(0, found);
+        if (found != string::npos) line.erase(0, found);
         found = line.find_last_not_of(" ");
-        if (found != string::npos)
-            line.erase(found + 1);
+        if (found != string::npos) line.erase(found + 1);
         // if line is empty drop it
         if (!line.empty()) {
             lines.push_back(line);
@@ -39,9 +35,9 @@ CommandType Parser::commandType() {
     string cmd = lines[lineNum].substr(0, lines[lineNum].find_first_of(" "));
     // cout << cmd << endl;
     CommandType cmdType;
-    if (cmd == "add" || cmd == "sub" || cmd == "neg" ||
-        cmd == "eq" || cmd == "gt" || cmd == "lt" ||
-        cmd == "and" || cmd == "or" || cmd == "not")
+    if (cmd == "add" || cmd == "sub" || cmd == "neg" || cmd == "eq" ||
+        cmd == "gt" || cmd == "lt" || cmd == "and" || cmd == "or" ||
+        cmd == "not")
         cmdType = CommandType::C_ARITHMETIC;
     else if (cmd == "push")
         cmdType = CommandType::C_PUSH;
@@ -93,9 +89,9 @@ int Parser::arg2() {
 // https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c
 bool hasEnding(string const& fullString, string const& ending) {
     if (fullString.length() >= ending.length()) {
-        return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
-    }
-    else {
+        return (0 == fullString.compare(fullString.length() - ending.length(),
+                                        ending.length(), ending));
+    } else {
         return false;
     }
 }

@@ -1,24 +1,23 @@
+#include <cassert>
+#include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
-#include <fstream>
-#include <map>
-#include <cassert>
-#include "dirent.h"
-#include "Parser.h"
+
 #include "CodeWriter.h"
+#include "Parser.h"
+#include "dirent.h"
 using namespace std;
 
 vector<string> filefinder(string path, string const& postfix = ".vm");
-
 
 int main(int argc, char** argv) {
     vector<string> files;
     string path = argv[1];
     if (hasEnding(path)) {
         files.push_back(path);
-    }
-    else {
+    } else {
         files = filefinder(path);
     }
     CodeWriter codeWriter(path);
@@ -33,8 +32,10 @@ int main(int argc, char** argv) {
             // cout << int(cmdType) << endl;
             if (cmdType == CommandType::C_ARITHMETIC)
                 codeWriter.writeArithmetic(parser.arg1(cmdType));
-            else if (cmdType == CommandType::C_PUSH || cmdType == CommandType::C_POP)
-                codeWriter.writePushPop(cmdType, parser.arg1(cmdType), parser.arg2());
+            else if (cmdType == CommandType::C_PUSH ||
+                     cmdType == CommandType::C_POP)
+                codeWriter.writePushPop(cmdType, parser.arg1(cmdType),
+                                        parser.arg2());
             else if (cmdType == CommandType::C_LABEL)
                 codeWriter.writeLabel(parser.arg1(cmdType));
             else if (cmdType == CommandType::C_GOTO)
@@ -56,9 +57,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-
-
-// get from 
+// get from
 // https://stackoverflow.com/questions/612097/how-can-i-get-the-list-of-files-in-a-directory-using-c-or-c
 vector<string> filefinder(string path, string const& postfix) {
     vector<string> files;
@@ -75,4 +74,3 @@ vector<string> filefinder(string path, string const& postfix) {
     }
     return files;
 }
-

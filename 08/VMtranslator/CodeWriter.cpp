@@ -1,6 +1,7 @@
 #include "CodeWriter.h"
-#include <iostream>
+
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 CodeWriter::CodeWriter(string pathname) : labelNum(0) {
@@ -8,39 +9,40 @@ CodeWriter::CodeWriter(string pathname) : labelNum(0) {
     string outputFilename;
     if (hasEnding(pathname, ".vm")) {
         outputFilename = getNoPostFilename(pathname);
-    }
-    else {
-        pathname.erase(pathname.size() - 1); // remove last character
+    } else {
+        pathname.erase(pathname.size() - 1);  // remove last character
         int found = pathname.find_last_of("\\");
-        filename = (found == string::npos) ? pathname : pathname.substr(found + 1);
+        filename =
+            (found == string::npos) ? pathname : pathname.substr(found + 1);
         outputFilename = pathname + "\\" + filename;
     }
     cout << outputFilename << endl;
     fout.open(outputFilename + ".asm");
 }
 
-CodeWriter::~CodeWriter() {
-    fout.close();
-}
+CodeWriter::~CodeWriter() { fout.close(); }
 
 void CodeWriter::writeInit() {
-    fout << "@256\nD=A\n@SP\nM=D\n"; // comment this out in no init situation
+    fout << "@256\nD=A\n@SP\nM=D\n";  // comment this out in no init situation
     fout << "@START\n0;JMP\n";
-    fout << "(MAKETRUE)\n" << decSP() << "M=-1\n" << incSP() << getReturn();
+    fout << "(MAKETRUE)\n"
+         << decSP() << "M=-1\n"
+         << incSP() << getReturn();
     fout << "(START)\n";
-    writeCall("Sys.init", 0); // comment this out in no init situation
+    writeCall("Sys.init", 0);  // comment this out in no init situation
 }
 
 void CodeWriter::setFileName(string filename) {
     size_t slash = filename.find_last_of("\\");
-    this->filename = (slash == string::npos) ? filename : filename.substr(slash + 1);
+    this->filename =
+        (slash == string::npos) ? filename : filename.substr(slash + 1);
     for (int i = 0; i < this->filename.size(); i++)
         this->filename[i] = toupper(this->filename[i]);
     fout << "(_" << this->filename << "_)\n";
 }
 
 void CodeWriter::close() {
-    fout << "(END)\n@END\n0;JMP\n"; // write infinite loop
+    fout << "(END)\n@END\n0;JMP\n";  // write infinite loop
 }
 
 string CodeWriter::decSP() { return "@SP\nAM=M-1\n"; }
@@ -49,35 +51,45 @@ string CodeWriter::incSP() { return "@SP\nAM=M+1\n"; }
 
 string CodeWriter::getSP() { return "@SP\nA=M\n"; }
 
-string CodeWriter::setReturn() { return  "@RETURN" + to_string(labelNum) + "\nD=A\n@R15\nM=D\n"; }
+string CodeWriter::setReturn() {
+    return "@RETURN" + to_string(labelNum) + "\nD=A\n@R15\nM=D\n";
+}
 
-string CodeWriter::getReturn() { return  "@R15\nA=M\n0;JMP\n"; }
+string CodeWriter::getReturn() { return "@R15\nA=M\n0;JMP\n"; }
 
 void CodeWriter::writeArithmetic(string cmd) {
-    if (cmd == "add" || cmd == "sub" || cmd == "and" || cmd == "or")
-    {
-        fout << decSP() << "D=M\n" << decSP();
-        if (cmd == "add")      fout << "M=D+M\n";
-        else if (cmd == "sub") fout << "M=M-D\n";
-        else if (cmd == "and") fout << "M=D&M\n";
-        else                   fout << "M=D|M\n";
+    if (cmd == "add" || cmd == "sub" || cmd == "and" || cmd == "or") {
+        fout << decSP() << "D=M\n"
+             << decSP();
+        if (cmd == "add")
+            fout << "M=D+M\n";
+        else if (cmd == "sub")
+            fout << "M=M-D\n";
+        else if (cmd == "and")
+            fout << "M=D&M\n";
+        else
+            fout << "M=D|M\n";
         fout << incSP();
-    }
-    else if (cmd == "neg" || cmd == "not") {
+    } else if (cmd == "neg" || cmd == "not") {
         fout << decSP();
-        if (cmd == "neg") fout << "M=-M\n";
-        else              fout << "M=!M\n";
+        if (cmd == "neg")
+            fout << "M=-M\n";
+        else
+            fout << "M=!M\n";
         fout << incSP();
-    }
-    else if (cmd == "eq" || cmd == "gt" || cmd == "lt") {
+    } else if (cmd == "eq" || cmd == "gt" || cmd == "lt") {
         fout << setReturn();
-        fout << decSP() << "D=M\n" << decSP() << "D=M-D\nM=0\n" << incSP() << "@MAKETRUE\n";
-        if (cmd == "eq")      fout << "D;JEQ\n";
-        else if (cmd == "gt") fout << "D;JGT\n";
-        else                  fout << "D;JLT\n";
+        fout << decSP() << "D=M\n"
+             << decSP() << "D=M-D\nM=0\n"
+             << incSP() << "@MAKETRUE\n";
+        if (cmd == "eq")
+            fout << "D;JEQ\n";
+        else if (cmd == "gt")
+            fout << "D;JGT\n";
+        else
+            fout << "D;JLT\n";
         fout << "(RETURN" << labelNum++ << ")\n";
-    }
-    else {
+    } else {
         cout << "Invalid Arithmetic OP\n";
     }
 }
@@ -91,46 +103,57 @@ void CodeWriter::writePushPop(CommandType cmdType, string segment, int index) {
             fout << "@" << index << "\nD=A\n";
         else if (segment == "static") {
             fout << "@" << filename << "." << index << "\nD=M\n";
-        }
-        else {
+        } else {
             if (segment == "pointer" || segment == "temp") {
-                if (segment == "pointer") fout << "@THIS\n";
-                else                      fout << "@R5\n";
+                if (segment == "pointer")
+                    fout << "@THIS\n";
+                else
+                    fout << "@R5\n";
                 fout << "D=A\n";
-            }
-            else {
-                if (segment == "local")         fout << "@LCL\n";
-                else if (segment == "argument") fout << "@ARG\n";
-                else if (segment == "this")     fout << "@THIS\n";
-                else                            fout << "@THAT\n";
+            } else {
+                if (segment == "local")
+                    fout << "@LCL\n";
+                else if (segment == "argument")
+                    fout << "@ARG\n";
+                else if (segment == "this")
+                    fout << "@THIS\n";
+                else
+                    fout << "@THAT\n";
                 fout << "D=M\n";
             }
             fout << "@" << index << "\nA=D+A\nD=M\n";
         }
         // push D to stack
-        fout << getSP() << "M=D\n" << incSP();
+        fout << getSP() << "M=D\n"
+             << incSP();
 
-    }
-    else {
+    } else {
         if (segment == "static") {
             fout << decSP() << "D=M\n";
             fout << "@" << filename << "." << index << "\nM=D\n";
-        }
-        else {
+        } else {
             if (segment == "pointer" || segment == "temp") {
-                if (segment == "pointer") fout << "@THIS\n";
-                else                      fout << "@R5\n";
+                if (segment == "pointer")
+                    fout << "@THIS\n";
+                else
+                    fout << "@R5\n";
                 fout << "D=A\n@";
-            }
-            else {
-                if (segment == "local")         fout << "@LCL\n";
-                else if (segment == "argument") fout << "@ARG\n";
-                else if (segment == "this")     fout << "@THIS\n";
-                else                            fout << "@THAT\n";
+            } else {
+                if (segment == "local")
+                    fout << "@LCL\n";
+                else if (segment == "argument")
+                    fout << "@ARG\n";
+                else if (segment == "this")
+                    fout << "@THIS\n";
+                else
+                    fout << "@THAT\n";
                 fout << "D=M\n@";
             }
             // R13 is the address of RAM
-            fout << index << "\nD=D+A\n" << "@R13\nM=D\n" << decSP() << "D=M\n" << "@R13\nA=M\nM=D\n";
+            fout << index << "\nD=D+A\n"
+                 << "@R13\nM=D\n"
+                 << decSP() << "D=M\n"
+                 << "@R13\nA=M\nM=D\n";
         }
     }
 }
@@ -156,15 +179,25 @@ void CodeWriter::writeIf(string label) {
 void CodeWriter::writeCall(string functionName, int numArgs) {
     // fout << "\n";
     // push RETURNlabelNum
-    fout << "@RETURN" << labelNum << "\nD=A\n" << getSP() << "M=D\n" << incSP();
+    fout << "@RETURN" << labelNum << "\nD=A\n"
+         << getSP() << "M=D\n"
+         << incSP();
     // push LCL
-    fout << "@LCL\nD=M\n" << getSP() << "M=D\n" << incSP();
+    fout << "@LCL\nD=M\n"
+         << getSP() << "M=D\n"
+         << incSP();
     // push ARG
-    fout << "@ARG\nD=M\n" << getSP() << "M=D\n" << incSP();
+    fout << "@ARG\nD=M\n"
+         << getSP() << "M=D\n"
+         << incSP();
     // push THIS
-    fout << "@THIS\nD=M\n" << getSP() << "M=D\n" << incSP();
+    fout << "@THIS\nD=M\n"
+         << getSP() << "M=D\n"
+         << incSP();
     // push THAT
-    fout << "@THAT\nD=M\n" << getSP() << "M=D\n" << incSP();
+    fout << "@THAT\nD=M\n"
+         << getSP() << "M=D\n"
+         << incSP();
     // ARG = SP - n - 5
     fout << "@SP\nD=M\n@" << numArgs << "\nD=D-A\n@5\nD=D-A\n@ARG\nM=D\n";
     // LCL = SP

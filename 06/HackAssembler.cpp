@@ -1,19 +1,21 @@
 // Hack Compiler with symbols
-#include <string>
-#include <fstream>
-#include <map>
 #include <algorithm>
+#include <fstream>
 #include <iostream>
+#include <map>
 #include <queue>
+#include <string>
 using namespace std;
 
-enum struct CommandType { A_COMMAND, C_COMMAND, L_COMMAND };
+enum struct CommandType { A_COMMAND,
+                          C_COMMAND,
+                          L_COMMAND };
 
-class SymbolTable
-{
-private:
+class SymbolTable {
+   private:
     map<string, int> table;
-public:
+
+   public:
     void init() {
         addEntry("SP", 0);
         addEntry("LCL", 1);
@@ -56,12 +58,12 @@ int SymbolTable::getAddress(string symbol) {
     return table[symbol];
 }
 
-class Parser
-{
-private:
+class Parser {
+   private:
     vector<string> lines;
     int lineNum;
-public:
+
+   public:
     Parser(string fileName);
     bool hasMoreCommands();
     CommandType commandType();
@@ -72,11 +74,10 @@ public:
     void buildPreTable(SymbolTable& table);
 };
 
-Parser::Parser(string fileName) :lineNum(-1) {
+Parser::Parser(string fileName) : lineNum(-1) {
     fstream fin(fileName);
     string line;
-    while (getline(fin, line))
-    {
+    while (getline(fin, line)) {
         // Remove all the spaces in this line
         line.erase(remove(line.begin(), line.end(), ' '), line.end());
         size_t found = line.find_first_of("/");
@@ -141,9 +142,10 @@ string Parser::jump() {
 }
 
 class Code {
-private:
+   private:
     map<string, string> compRes, jumpRes, destRes;
-public:
+
+   public:
     void init() {
         destRes[""] = "000";
         destRes["M"] = "001";
@@ -211,7 +213,7 @@ int main(int argc, char** argv) {
     // cout << argv[1] << endl;
     string inputFileName(argv[1]);
     string outputFileName;
-    for (int i = 0; i < inputFileName.length();i++)
+    for (int i = 0; i < inputFileName.length(); i++)
         if (inputFileName[i] != '.')
             outputFileName += inputFileName[i];
         else
@@ -246,14 +248,12 @@ int main(int argc, char** argv) {
             for (int i = 14; i >= 0; i--)
                 fout << ((num >> i) & 1);
             fout << '\n';
-        }
-        else if (cmd == CommandType::C_COMMAND) {
+        } else if (cmd == CommandType::C_COMMAND) {
             string dest = code.dest(parser.dest());
             string comp = code.comp(parser.comp());
             string jump = code.jump(parser.jump());
             fout << "111" << comp << dest << jump << '\n';
-        }
-        else // L_COMMAND
+        } else  // L_COMMAND
             continue;
     }
     return 0;

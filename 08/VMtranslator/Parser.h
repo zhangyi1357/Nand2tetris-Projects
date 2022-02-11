@@ -8,18 +8,29 @@ using std::vector;
 
 bool hasEnding(string const& fullString, string const& ending = ".vm");
 string getNoPostFilename(const string& inputFilename);
-enum class CommandType { C_ARITHMETIC, C_PUSH, C_POP, C_LABEL, C_GOTO, C_IF, C_FUNCTION, C_RETURN, C_CALL };
+enum class CommandType {
+    C_ARITHMETIC,
+    C_PUSH,
+    C_POP,
+    C_LABEL,
+    C_GOTO,
+    C_IF,
+    C_FUNCTION,
+    C_RETURN,
+    C_CALL
+};
 
 class Parser {
-public:
+   public:
     Parser(string filename);
     bool hasMoreCommands();
     CommandType commandType();
     string arg1(CommandType cmdType);
     int arg2();
-private:
+
+   private:
     vector<string> lines;
-    int lineNum; // current working line number (initial -1)
+    int lineNum;  // current working line number (initial -1)
 };
 
 #endif

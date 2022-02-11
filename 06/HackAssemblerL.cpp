@@ -1,20 +1,22 @@
 // Hack Compiler without symbols
 
-#include <string>
-#include <fstream>
-#include <map>
 #include <algorithm>
+#include <fstream>
 #include <iostream>
+#include <map>
+#include <string>
 using namespace std;
 
-enum struct CommandType { A_COMMAND, C_COMMAND, L_COMMAND };
+enum struct CommandType { A_COMMAND,
+                          C_COMMAND,
+                          L_COMMAND };
 
-class Parser
-{
-private:
+class Parser {
+   private:
     ifstream fin;
     string line;
-public:
+
+   public:
     Parser(string fileName);
     ~Parser();
     bool hasMoreCommands();
@@ -91,12 +93,11 @@ string Parser::jump() {
     return jump;
 }
 
-
-
 class Code {
-private:
+   private:
     map<string, string> compRes, jumpRes, destRes;
-public:
+
+   public:
     void init() {
         destRes[""] = "000";
         destRes["M"] = "001";
@@ -164,7 +165,7 @@ int main(int argc, char** argv) {
     // cout << argv[1] << endl;
     string inputFileName(argv[1]);
     string outputFileName;
-    for (int i = 0; i < inputFileName.length();i++)
+    for (int i = 0; i < inputFileName.length(); i++)
         if (inputFileName[i] != '.')
             outputFileName += inputFileName[i];
         else
@@ -185,10 +186,10 @@ int main(int argc, char** argv) {
                 for (int i = 14; i >= 0; i--)
                     fout << ((num >> i) & 1);
                 fout << '\n';
+            } else {
+                fout << "not finished yet.\n";
             }
-            else { fout << "not finished yet.\n"; }
-        }
-        else {  // (cmd == CommandType::C_COMMAND)
+        } else {  // (cmd == CommandType::C_COMMAND)
             string dest = code.dest(parser.dest());
             string comp = code.comp(parser.comp());
             string jump = code.jump(parser.jump());

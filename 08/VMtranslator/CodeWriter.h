@@ -1,13 +1,14 @@
 #ifndef _CODEWRITER_
 #define _CODEWRITER_
-#include <string>
 #include <fstream>
+#include <string>
+
 #include "Parser.h"
-using std::string;
 using std::ofstream;
+using std::string;
 
 class CodeWriter {
-public:
+   public:
     CodeWriter(string pathname);
     ~CodeWriter();
     void writeInit();
@@ -21,9 +22,10 @@ public:
     void writeReturn();
     void writeFunction(string functionName, int numLocals);
     void close();
-private:
+
+   private:
     ofstream fout;
-    int labelNum; // return label number (initial 0)
+    int labelNum;  // return label number (initial 0)
     string filename;
     string functionName;
     string decSP();
