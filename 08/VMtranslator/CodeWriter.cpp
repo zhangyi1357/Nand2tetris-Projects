@@ -154,7 +154,7 @@ void CodeWriter::writeIf(string label) {
 }
 
 void CodeWriter::writeCall(string functionName, int numArgs) {
-    fout << "\n";
+    // fout << "\n";
     // push RETURNlabelNum
     fout << "@RETURN" << labelNum << "\nD=A\n" << getSP() << "M=D\n" << incSP();
     // push LCL
@@ -173,11 +173,11 @@ void CodeWriter::writeCall(string functionName, int numArgs) {
     fout << "@" << functionName << "\n0;JMP\n";
     // (RETURNlabelNum)
     fout << "(RETURN" << labelNum++ << ")\n";
-    fout << "\n";
+    // fout << "\n";
 }
 
 void CodeWriter::writeReturn() {
-    fout << "\n";
+    // fout << "\n";
     // FRAME = LCL
     fout << "@LCL\nD=M\n@FRAME\nM=D\n";
     // RET = *(FRAME - 5)
@@ -196,7 +196,7 @@ void CodeWriter::writeReturn() {
     fout << "@FRAME\nD=M\n@4\nA=D-A\nD=M\n@LCL\nM=D\n";
     // goto RET
     fout << "@RET\nA=M\n0;JMP\n";
-    fout << "\n";
+    // fout << "\n";
 }
 
 void CodeWriter::writeFunction(string functionName, int numLocals) {
