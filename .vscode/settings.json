@@ -5,5 +5,13 @@
         "vector": "cpp",
         "ostream": "cpp",
         "xstring": "cpp"
-    }
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "d:\\BaiduNetdiskWorkspace\\nand2tetris\\projects",
+            "binaryPath": "d:\\BaiduNetdiskWorkspace\\nand2tetris\\projects\\main",
+            "binaryArgs": []
+        }
+    ],
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools"
 }

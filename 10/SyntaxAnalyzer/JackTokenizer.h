@@ -10,29 +10,6 @@ enum struct Token { KEYWORD,
                     INT_CONST,
                     STRING_CONST };
 
-enum struct KeyWord { CLASS,
-                      METHOD,
-                      INT,
-                      FUNCTION,
-                      BOOLEAN,
-                      CONSTRUCTOR,
-                      CHAR,
-                      VOID,
-                      VAR,
-                      STATIC,
-                      FIELD,
-                      LET,
-                      DO,
-                      IF,
-                      ELSE,
-                      WHILE,
-                      RETURN,
-                      TRUE,
-                      FALSE,
-                      KNULL,
-                      THIS
-};
-
 class JackTokenizer {
    public:
     JackTokenizer() {}

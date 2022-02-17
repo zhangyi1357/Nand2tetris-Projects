@@ -52,7 +52,7 @@ void JackTokenizer::readFile() {
         content += line;
     }
     // cout << endl;
-    cout << content << endl;
+    // cout << content << endl;
 }
 
 bool JackTokenizer::hasMoreTokens() {
