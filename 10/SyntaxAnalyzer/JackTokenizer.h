@@ -35,9 +35,15 @@ enum struct KeyWord { CLASS,
 class JackTokenizer {
    private:
     ifstream fin;
+    ofstream fout;
+    string content;
+    int k;
 
    public:
-    JackTokenizer(const string& filename);
+    JackTokenizer() {}
+    void tokenize();
+    void readFile();
+    bool setFilename(const string& filename);
     bool hasMoreTokens();
     void advance();
     TokenType tokenType();
