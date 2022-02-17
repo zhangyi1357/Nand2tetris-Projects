@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
     for (auto file : files) {
         tokenizer.setFilename(file);
         tokenizer.readFile();
+        // cout << "will do tokenize\n";
         tokenizer.tokenize();
     }
     return 0;

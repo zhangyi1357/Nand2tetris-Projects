@@ -1,13 +1,14 @@
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <string>
 using namespace std;
 
-enum struct TokenType { KEYWORD,
-                        SYMBOL,
-                        IDENTIFIER,
-                        INT_CONST,
-                        STRING_CONST };
+enum struct Token { KEYWORD,
+                    SYMBOL,
+                    IDENTIFIER,
+                    INT_CONST,
+                    STRING_CONST };
 
 enum struct KeyWord { CLASS,
                       METHOD,
@@ -33,21 +34,22 @@ enum struct KeyWord { CLASS,
 };
 
 class JackTokenizer {
-   private:
-    ifstream fin;
-    ofstream fout;
-    string content;
-    int k;
-
    public:
     JackTokenizer() {}
     void tokenize();
     void readFile();
     bool setFilename(const string& filename);
+
+   private:
+    static set<char> symbols;
+    static set<string> keywords;
+    ifstream fin;
+    ofstream fout;
+    string content;
+    size_t k;  // next character index to read
     bool hasMoreTokens();
-    void advance();
-    TokenType tokenType();
-    KeyWord keyword();
+    Token tokenType();
+    string keyword();
     char symbol();
     string identifier();
     int intVal();
