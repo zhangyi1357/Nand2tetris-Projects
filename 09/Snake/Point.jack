@@ -1,0 +1,12 @@
+class Point {
+    field int x, y;
+    
+    constructor Point new(int row, int col) {
+        let x = row;
+        let y = col;
+        return this;
+    }
+
+    method int getx() { return x; }
+    method int gety() { return y; }
+}

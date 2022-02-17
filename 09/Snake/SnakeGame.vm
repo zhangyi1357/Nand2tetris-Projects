@@ -1,0 +1,262 @@
+function SnakeGame.new 2
+push constant 8
+call Memory.alloc 1
+pop pointer 0
+push constant 20
+pop this 6
+push constant 30
+pop this 7
+push constant 1
+pop this 4
+push constant 0
+pop this 5
+push constant 0
+pop this 3
+push this 6
+push constant 2
+call Math.divide 2
+push this 7
+push constant 2
+call Math.divide 2
+call Point.new 2
+pop local 0
+push local 0
+push constant 0
+call List.new 2
+pop this 1
+push this 6
+push constant 4
+call Math.divide 2
+push this 7
+push constant 4
+call Math.divide 2
+call Point.new 2
+pop this 2
+push this 6
+push this 7
+call Array.new 2
+pop this 0
+push constant 0
+pop local 1
+label WHILE_EXP0
+push local 1
+push this 7
+push this 6
+call Math.multiply 2
+lt
+not
+if-goto WHILE_END0
+push local 1
+push this 0
+add
+push constant 32
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+pop local 1
+label WHILE_EXP1
+push local 1
+push this 7
+lt
+not
+if-goto WHILE_END1
+push local 1
+push this 0
+add
+push constant 35
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 1
+push this 6
+push constant 1
+sub
+push this 7
+call Math.multiply 2
+add
+push this 0
+add
+push constant 35
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP1
+label WHILE_END1
+push constant 0
+pop local 1
+label WHILE_EXP2
+push local 1
+push this 6
+lt
+not
+if-goto WHILE_END2
+push this 7
+push local 1
+call Math.multiply 2
+push this 0
+add
+push constant 35
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push this 7
+push local 1
+push constant 1
+add
+call Math.multiply 2
+push constant 1
+sub
+push this 0
+add
+push constant 35
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP2
+label WHILE_END2
+push pointer 0
+return
+function SnakeGame.draw 4
+push argument 0
+pop pointer 0
+call Screen.clearScreen 0
+pop temp 0
+push constant 0
+push constant 0
+call Output.moveCursor 2
+pop temp 0
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push this 6
+lt
+not
+if-goto WHILE_END0
+push constant 0
+pop local 1
+label WHILE_EXP1
+push local 1
+push this 7
+lt
+not
+if-goto WHILE_END1
+push local 0
+push this 7
+call Math.multiply 2
+push local 1
+add
+push this 0
+add
+pop pointer 1
+push that 0
+call Output.printChar 1
+pop temp 0
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP1
+label WHILE_END1
+call Output.println 0
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push this 1
+pop local 3
+label WHILE_EXP2
+push local 3
+push constant 0
+eq
+not
+not
+if-goto WHILE_END2
+push local 3
+call List.getData 1
+pop local 2
+push local 2
+call Point.getx 1
+push local 2
+call Point.gety 1
+call Output.moveCursor 2
+pop temp 0
+push constant 42
+call Output.printChar 1
+pop temp 0
+push local 3
+call List.getNext 1
+pop local 3
+goto WHILE_EXP2
+label WHILE_END2
+push this 2
+call Point.getx 1
+push this 2
+call Point.gety 1
+call Output.moveCursor 2
+pop temp 0
+push constant 36
+call Output.printChar 1
+pop temp 0
+push constant 0
+return
+function SnakeGame.runSimulation 0
+push argument 0
+pop pointer 0
+label WHILE_EXP0
+push this 3
+push constant 10
+lt
+not
+if-goto WHILE_END0
+push pointer 0
+call SnakeGame.draw 1
+pop temp 0
+push pointer 0
+call SnakeGame.performAI 1
+pop temp 0
+push pointer 0
+call SnakeGame.moveSnake 1
+not
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push pointer 0
+call SnakeGame.displayResult 1
+pop temp 0
+push constant 0
+return
+label IF_FALSE0
+push pointer 0
+call SnakeGame.pause 1
+pop temp 0
+goto WHILE_EXP0
+label WHILE_END0
+push pointer 0
+call SnakeGame.displayResult 1
+pop temp 0
+push constant 0
+return

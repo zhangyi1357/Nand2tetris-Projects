@@ -1,0 +1,22 @@
+class Main {
+   function void main() {
+      /* Prints some text using the standard library. */
+      var Point p, q, r;
+      var List v;
+      var SnakeGame game;
+      let p = Point.new(2, 3);
+      let q = Point.new(4, 5);
+      let r = Point.new(6, 7);
+      let v = List.new(p, null);
+      let v = List.new(q, v);
+      let v = List.new(r, v);
+      do v.print();
+      do v.removeTail();
+      do v.print();
+      do Output.printInt(40 / 30);
+      do Output.println();
+      let game = SnakeGame.new();
+      do game.Draw();
+      return;
+   }
+}

@@ -1,0 +1,92 @@
+class SnakeGame {
+   field Array world;
+   field List snake;
+   field Point food;
+   field int numEaten, dx, dy, numRows, numCols;
+
+   /** Constructs a new Square Game. */
+   constructor SnakeGame new() {
+      var Point startPoint;
+      var int i;
+      
+      let numRows = 20;
+      let numCols = 30;
+      let dx = 1;
+      let dy = 0;
+      let numEaten = 0;
+
+      let startPoint = Point.new(numRows / 2, numCols / 2);
+      let snake = List.new(startPoint, null);
+
+      let food = Point.new(numRows / 4, numCols / 4);
+
+      let world = Array.new(numRows, numCols);
+      let i = 0;
+      while (i < (numCols * numRows)) {
+          let world[i] = 32; // ' '
+          let i = i + 1;
+      }
+      let i = 0;
+      while (i < numCols) {
+          let world[i] = 35; // '#'
+          let world[i + ((numRows - 1) * numCols)] = 35;
+          let i = i + 1;
+      }
+      let i = 0;
+      while (i < numRows) {
+          let world[numCols * i] = 35;
+          let world[numCols * (i + 1) - 1] = 35;
+          let i = i + 1;
+      }
+      return this;
+   }
+
+   method void draw() {
+       var int row, col;
+       var Point point;
+       var List curr;
+       do Screen.clearScreen();
+       do Output.moveCursor(0, 0);
+       let row = 0;
+    //    do Output.printString("start drawing");
+       while (row < numRows) {
+           let col = 0;
+           while (col < numCols) {
+               do Output.printChar(world[row*numCols + col]);
+               let col = col + 1;
+           }
+           do Output.println();
+           let row = row + 1;
+       }
+    //    do Output.printString("draw done");
+       let curr = snake;
+       while (~(curr = null)) {
+           let point = curr.getData();
+           do Output.moveCursor(point.getx(), point.gety());
+           do Output.printChar(42); // '*'
+           let curr = curr.getNext();
+       }
+
+       do Output.moveCursor(food.getx(), food.gety());
+       do Output.printChar(36); // '$'
+       return;
+   }
+
+   method void runSimulation() {
+       while (numEaten < 10) {// 10 food for win
+           do draw();
+           do performAI();
+
+           if (~moveSnake()) {
+               do displayResult();
+               return;
+           }
+           do pause();
+       }
+       do displayResult();
+       return;
+   }
+}
+
+
+
