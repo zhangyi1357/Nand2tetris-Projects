@@ -20,9 +20,9 @@ int main(int argc, char** argv) {
         files = filefinder(argv[1]);
     }
     cout << "File list: \n";
-    for (auto file : files) {
+    for (auto file : files)
         cout << file << endl;
-    }
+
     return 0;
 }
 
