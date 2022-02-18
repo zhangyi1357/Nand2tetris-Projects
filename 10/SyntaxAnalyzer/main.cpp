@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 
+#include "CompilationEngine.h"
 #include "JackTokenizer.h"
 #include "dirent.h"
 using namespace std;
@@ -24,11 +25,13 @@ int main(int argc, char** argv) {
     for (auto file : files)
         cout << file << endl;
     JackTokenizer tokenizer;
+    CompilationEngine compileEngine;
     for (auto file : files) {
         tokenizer.setFilename(file);
         tokenizer.readFile();
         // cout << "will do tokenize\n";
-        tokenizer.tokenize();
+        compileEngine.setFileName(file, &tokenizer);
+        compileEngine.compileClass();
     }
     return 0;
 }

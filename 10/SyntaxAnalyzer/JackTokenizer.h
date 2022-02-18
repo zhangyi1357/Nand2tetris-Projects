@@ -1,3 +1,5 @@
+#ifndef _JACKTOKENIZER_
+#define _JACKTOKENIZER_
 #include <fstream>
 #include <iostream>
 #include <set>
@@ -16,6 +18,13 @@ class JackTokenizer {
     void tokenize();
     void readFile();
     bool setFilename(const string& filename);
+    bool hasMoreTokens();
+    Token tokenType();
+    string keyword();
+    char symbol();
+    string identifier();
+    int intVal();
+    string stringVal();
 
    private:
     static set<char> symbols;
@@ -24,11 +33,5 @@ class JackTokenizer {
     ofstream fout;
     string content;
     size_t k;  // next character index to read
-    bool hasMoreTokens();
-    Token tokenType();
-    string keyword();
-    char symbol();
-    string identifier();
-    int intVal();
-    string stringVal();
 };
+#endif
