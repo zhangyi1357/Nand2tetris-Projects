@@ -1,6 +1,5 @@
 #include "CompilationEngine.h"
 
-#include <cassert>
 #include <iostream>
 
 bool CompilationEngine::setFileName(string filename, JackTokenizer *tokenizer) {
@@ -29,10 +28,16 @@ inline void CompilationEngine::output(string label, string content) {
     fout << "<" << label << "> " << content << " </" << label << ">\n";
 }
 
-void CompilationEngine::compileSymbol(string where, char symbol) {
-    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != symbol)
+void CompilationEngine::compileSymbol(string where, string symbol) {
+    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != symbol[0])
         outputError(where, "symbol " + symbol);
-    output("symbol", "" + symbol);
+    output("symbol", symbol);
+}
+
+void CompilationEngine::compileIdentifier() {
+    if (!checkType(Token::IDENTIFIER))
+        outputError("compileIdentifier; ", "identifier");
+    output("identifier", tokenizer->identifier());
 }
 
 void CompilationEngine::compileClass() {
@@ -50,9 +55,7 @@ void CompilationEngine::compileClass() {
     output("identifier", tokenizer->identifier());
 
     // {
-    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != '{')
-        outputError(where, "symbol {");
-    output("symbol", "{");
+    compileSymbol(where, "{");
 
     // classVarDec* & subroutineDec*
     while (tokenizer->tokenType() == Token::KEYWORD) {
@@ -72,9 +75,8 @@ void CompilationEngine::compileClass() {
     }
 
     // }
-    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != '}')
-        outputError(where, "symbol }");
-    output("symbol", "}");
+    compileSymbol(where, "}");
+
     fout << "</class>" << endl;
 }
 
@@ -121,6 +123,7 @@ void CompilationEngine::compileClassVarDec() {
     // ;
     output("symbol", ";");
 }
+
 void CompilationEngine::compileSubroutine() {
     string where = "compileSubroutine: ";
 
@@ -133,9 +136,7 @@ void CompilationEngine::compileSubroutine() {
     output("identifier", tokenizer->identifier());
 
     // (
-    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != '(')
-        outputError(where, "symbol (");
-    output("symbol", "(");
+    compileSymbol(where, "(");
 
     // parameterList
     fout << "<parameterList>" << endl;
@@ -180,12 +181,99 @@ void CompilationEngine::compileSubroutineBody() {
     string where = "compileSubroutineBody: ";
 
     // {
-    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != '{')
-        outputError(where, "symbol {");
-    output("symbol", "{");
+    compileSymbol(where, "{");
 
-    // {
-    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != '{')
-        outputError(where, "symbol {");
-    output("symbol", "{");
+    // varDec*
+    string word;
+    while (checkType(Token::KEYWORD) && (word = tokenizer->keyword()) == "var")
+        compileVarDec();
+
+    // statements
+    if (word != "" && word != "var")
+        compileStatements(word);
+
+    // }
+    compileSymbol(where, "}");
+}
+
+void CompilationEngine::compileVarDec() {
+    string where = "compileVarDec: ";
+    fout << "<varDec>" << endl;
+    output("keyword", "var");
+
+    // typeName
+    compileTypename();
+
+    // varName
+    compileIdentifier();
+
+    while (checkType(Token::SYMBOL)) {
+        char ch = tokenizer->symbol();
+        if (ch == ';')
+            break;
+        if (ch != ',')
+            outputError(where, "symbol ,");
+        output("symbol", ",");
+
+        // typename
+        compileTypename();
+        // varName
+        compileIdentifier();
+    }
+
+    output("symbol", ";");
+
+    fout << "</varDec>" << endl;
+}
+
+void CompilationEngine::compileStatements(string word) {
+    string where = "compileStatements: ";
+    fout << "<statements>" << endl;
+    while (true) {
+        if (word == "let")
+            compileLet();
+        else if (word == "if")
+            compileIf();
+        else if (word == "while")
+            compileWhile();
+        else if (word == "do")
+            compileDo();
+        else if (word == "return")
+            compileReturn();
+        else
+            outputError(where, "keyword let or if or while or do or return");
+        if (!checkType(Token::KEYWORD))
+            break;
+        word = tokenizer->keyword();
+    }
+    fout << "</statements>" << endl;
+}
+
+void CompilationEngine::compileLet() {
+    string where = "compileLet: ";
+    fout << "<letStatement>" << endl;
+    output("keyword", "let");
+    // varname
+    compileIdentifier();
+    if (!checkType(Token::SYMBOL))
+        outputError(where, "symbol");
+    char ch = tokenizer->symbol();
+    if (ch == '[') {
+        output("symbol", "[");
+        compileExpression();
+        compileSymbol(where, "]");
+        if (!checkType(Token::SYMBOL))
+            outputError(where, "symbol");
+        ch = tokenizer->symbol();
+    }
+
+    if (ch != '=')
+        outputError(where, "symbol =");
+    output("symbol", "=");
+
+    compileExpression();
+
+    compileSymbol(where, ";");
+
+    fout << "</letStatement>" << endl;
 }

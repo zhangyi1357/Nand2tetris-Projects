@@ -19,7 +19,7 @@ class CompilationEngine {
     void compileSubroutine();
     void compileParameterList();
     void compileVarDec();
-    void compileStatements();
+    void compileStatements(string word);
     void compileDo();
     void compileSubroutineBody();
     void compileLet();
@@ -33,6 +33,7 @@ class CompilationEngine {
     void output(string label, string content);
     void outputError(string where, string name);
     void compileTypename();
-    void compileSymbol(string where, char symbol);
+    void compileSymbol(string where, string symbol);
+    void CompilationEngine::compileIdentifier();
 };
-#endif  // !_COMPILATIONENGINE_
+#endif  // _COMPILATIONENGINE_
