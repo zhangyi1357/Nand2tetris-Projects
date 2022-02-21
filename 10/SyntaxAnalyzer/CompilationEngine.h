@@ -21,6 +21,7 @@ class CompilationEngine {
     void compileVarDec();
     void compileStatements();
     void compileDo();
+    void compileSubroutineBody();
     void compileLet();
     void compileWhile();
     void compileReturn();
@@ -28,7 +29,10 @@ class CompilationEngine {
     void compileExpression();
     void compileTerm();
     void compileExpressionList();
-    inline bool checkType(Token type);
-    inline void CompilationEngine::output(string label, string content);
+    bool checkType(Token type);
+    void output(string label, string content);
+    void outputError(string where, string name);
+    void compileTypename();
+    void compileSymbol(string where, char symbol);
 };
 #endif  // !_COMPILATIONENGINE_

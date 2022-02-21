@@ -17,60 +17,175 @@ bool CompilationEngine::setFileName(string filename, JackTokenizer *tokenizer) {
 }
 
 inline bool CompilationEngine::checkType(Token type) {
-    assert(tokenizer->hasMoreTokens() && tokenizer->tokenType() == type);
-    return true;
+    return tokenizer->hasMoreTokens() && tokenizer->tokenType() == type;
+}
+
+inline void CompilationEngine::outputError(string where, string name) {
+    cerr << where << "should be " << name << endl;
+    fout << "Compilation failed here!" << endl;
 }
 
 inline void CompilationEngine::output(string label, string content) {
     fout << "<" << label << "> " << content << " </" << label << ">\n";
 }
 
-void CompilationEngine::compileClass() {
-    string word;
-    char ch;
-    fout << "<class>\n";
+void CompilationEngine::compileSymbol(string where, char symbol) {
+    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != symbol)
+        outputError(where, "symbol " + symbol);
+    output("symbol", "" + symbol);
+}
 
-    checkType(Token::KEYWORD);
-    assert(tokenizer->keyword() == "class");
+void CompilationEngine::compileClass() {
+    string where = "compileClass: ";
+    fout << "<class>" << endl;
+
+    // class
+    if (!checkType(Token::KEYWORD) || tokenizer->keyword() != "class")
+        outputError(where, "keyword class");
     output("keyword", "class");
 
-    checkType(Token::IDENTIFIER);
-    word = tokenizer->identifier();
-    output("identifier", word);
+    // className
+    if (!checkType(Token::IDENTIFIER))
+        outputError(where, "identifier");
+    output("identifier", tokenizer->identifier());
 
-    checkType(Token::SYMBOL);
-    assert(tokenizer->symbol() == '{');
+    // {
+    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != '{')
+        outputError(where, "symbol {");
     output("symbol", "{");
 
+    // classVarDec* & subroutineDec*
     while (tokenizer->tokenType() == Token::KEYWORD) {
-        word = tokenizer->keyword();
+        string word = tokenizer->keyword();
         if (word == "field" || word == "static") {
-            fout << "<classVarDec>\n";
+            fout << "<classVarDec>" << endl;
             output("keyword", word);
             compileClassVarDec();
-            fout << "</classVarDec>\n";
+            fout << "</classVarDec>" << endl;
         } else if (word == "constructor" || word == "function" || word == "method" || word == "void") {
-            fout << "<subroutineDec>\n";
+            fout << "<subroutineDec>" << endl;
             output("keyword", word);
             compileSubroutine();
-            fout << "</subroutineDec>";
+            fout << "</subroutineDec>" << endl;
         } else
-            cerr << "not valid type!\n";
+            outputError(where, "keyword for classVarDec or subroutineDec");
     }
 
-    assert(tokenizer->symbol() == '}');
+    // }
+    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != '}')
+        outputError(where, "symbol }");
     output("symbol", "}");
-    fout << "</class>\n";
+    fout << "</class>" << endl;
+}
+
+void CompilationEngine::compileTypename() {
+    string where = "compileTypename: ";
+    if (!checkType(Token::IDENTIFIER) && !checkType(Token::KEYWORD))
+        outputError(where, "identifier or keyword");
+    Token type = tokenizer->tokenType();
+    if (type == Token::IDENTIFIER)
+        output("identifier", tokenizer->identifier());
+    else {
+        string word = tokenizer->keyword();
+        if (word != "int" && word != "char" && word != "boolean" && word != "void")
+            outputError(where, "keyword int or char or boolean");
+        output("keyword", word);
+    }
 }
 
 void CompilationEngine::compileClassVarDec() {
-    Token type = tokenizer->tokenType();
-    assert(type == Token::IDENTIFIER || type == Token::KEYWORD);
-    if (type == Token::IDENTIFIER)
+    string where = "compileClassVarDec: ";
+
+    // typeName
+    // some problem here (void can also pass)
+    compileTypename();
+
+    // varName
+    if (!checkType(Token::IDENTIFIER))
+        outputError(where, "identifier");
+    output("identifier", tokenizer->identifier());
+
+    // (',' varName)*
+    while (checkType(Token::SYMBOL)) {
+        char ch = tokenizer->symbol();
+        if (ch == ';')
+            break;
+        if (ch != ',')
+            outputError(where, "symbol ,");
+        output("symbol", ",");
+        if (!checkType(Token::IDENTIFIER))
+            outputError(where, "identifier");
         output("identifier", tokenizer->identifier());
-    else
-        output("keyword", tokenizer->keyword());
-    
+    }
+
+    // ;
+    output("symbol", ";");
 }
 void CompilationEngine::compileSubroutine() {
+    string where = "compileSubroutine: ";
+
+    // (void | type)
+    compileTypename();
+
+    // subroutineName
+    if (!checkType(Token::IDENTIFIER))
+        outputError(where, "identifier");
+    output("identifier", tokenizer->identifier());
+
+    // (
+    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != '(')
+        outputError(where, "symbol (");
+    output("symbol", "(");
+
+    // parameterList
+    fout << "<parameterList>" << endl;
+    compileParameterList();
+    fout << "</parameterList>" << endl;
+
+    // check has been done by compileParameterList
+    output("symbol", ")");
+
+    // subroutineBody
+    fout << "<subroutineBody>" << endl;
+    compileSubroutineBody();
+    fout << "</subroutineBody>" << endl;
+}
+
+void CompilationEngine::compileParameterList() {
+    string where = "compileParameterList: ";
+    // typeName
+    // some problem here (void can also pass)
+    compileTypename();
+
+    // varName
+    if (!checkType(Token::IDENTIFIER))
+        outputError(where, "identifier");
+    output("identifier", tokenizer->identifier());
+
+    // (',' varName)*
+    while (checkType(Token::SYMBOL)) {
+        char ch = tokenizer->symbol();
+        if (ch == ')')
+            break;
+        if (ch != ',')
+            outputError(where, "symbol ,");
+        output("symbol", ",");
+        if (!checkType(Token::IDENTIFIER))
+            outputError(where, "identifier");
+        output("identifier", tokenizer->identifier());
+    }
+}
+
+void CompilationEngine::compileSubroutineBody() {
+    string where = "compileSubroutineBody: ";
+
+    // {
+    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != '{')
+        outputError(where, "symbol {");
+    output("symbol", "{");
+
+    // {
+    if (!checkType(Token::SYMBOL) || tokenizer->symbol() != '{')
+        outputError(where, "symbol {");
+    output("symbol", "{");
 }

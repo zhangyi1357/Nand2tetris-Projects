@@ -34,4 +34,4 @@ class JackTokenizer {
     string content;
     size_t k;  // next character index to read
 };
-#endif
+#endif  // _JACKTOKENIZER_
